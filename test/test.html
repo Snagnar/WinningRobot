@@ -1,0 +1,25 @@
+<html>
+    <head> 
+        <style> 
+        </style>
+        <script lang="JavaScript">
+
+            function getStuff() {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        document.getElementById("content").value += "hello, there!";
+                    }
+                };
+                xhttp.open("GET", "/read", true);
+                xhttp.send();
+            }
+        </script>
+    </head>
+    <body onload = 'setInterval(getStuff, 500);'> 
+        <div class='background'></div>
+        <div class='content' id="content">
+        
+        </div>
+    </body>
+</html>
