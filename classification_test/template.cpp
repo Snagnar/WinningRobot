@@ -26,7 +26,6 @@ using namespace std;
     // vector<double> centroids = {(max-min) / 4.0, ((max-min) * 2.0) / 4.0, ((max-min) * 3.0) / 4.0};
 
     while(true) {
-    // for(int w = 0; w<10000; w++) {
         double means[3] = {0};
         double counts[3] = {0};
         for(int x = 0; x<num_data; x++) {
@@ -101,7 +100,7 @@ int main(void){
             // cout<<"pred: "<<pred<<" but label was: "<<label<<endl;
             if(pred == label)score++;
         }
-        cout<<"glob min: "<<min<<" glob max: "<<max<<" diff: "<<(max-min)<<endl;
+        // cout<<"glob min: "<<min<<" glob max: "<<max<<" diff: "<<(max-min)<<endl;
         printf("round %d: your score: %f\n",f, score / float(N));
         average_score += score/float(N);
         //score the prediction
