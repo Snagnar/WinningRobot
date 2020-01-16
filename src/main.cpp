@@ -11,9 +11,9 @@ void main_loop();
 
 DebugServer dServer(80);
 
-// Scheduler sched;
-// Task server_task(0, TASK_FOREVER, &server_loop, &sched);
-// Task main_task(0, TASK_FOREVER, &main_loop, &sched);
+Scheduler sched;
+Task server_task(0, TASK_FOREVER, &server_loop, &sched);
+Task main_task(0, TASK_FOREVER, &main_loop, &sched);
 
 unsigned long int prev = 0;
 
@@ -24,13 +24,13 @@ void setup() {
   delay(100);
   Serial.println("HTTP server started");
   wPrintln("Starting stuff...");
-  // server_task.enable();
-  // main_task.enable();
-  // sched.startNow();
+  server_task.enable();
+  main_task.enable();
+  sched.startNow();
 }
 
 void loop() {
-  // sched.execute();
+  sched.execute();
 }
 
 void server_loop() {
