@@ -1,4 +1,5 @@
 #include "DebugServer.h"
+#include "DataCollector.h"
 #include <WiFi.h>
 #include <TaskScheduler.h>
 
