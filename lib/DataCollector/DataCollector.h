@@ -4,11 +4,13 @@
 #include <Arduino.h>
 
 class DataCollector {
+    public:
     DataCollector(int*, int);
     
     void readSensors();
     void cluster();
     byte classify(int);
+    int getDataCount();
     int* sensors;
     double borders[2];
 

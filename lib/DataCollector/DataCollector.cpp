@@ -45,15 +45,16 @@ double* kmeans(int* data, int num_data) {
 }
 
 int readAnalogValue(byte pin) {
-    int sum = 0;
-    for(int x = 0; x<10; x++)
-        sum+=analogRead(pin);
-    return sum / 10;
+    // int sum = 0;
+    // for(int x = 0; x<10; x++)
+    //     sum+=analogRead(pin);
+    // return sum / 10;
+    return analogRead(pin);
 }
 
 DataCollector::DataCollector(int* pins, int pinCount) {
     for(int x = 0; x<pinCount; x++)
-        pinMode(pins[x], INPUT_PULLUP);
+        pinMode(pins[x], INPUT);
     
     int values[pinCount] = {0};
     sensors = values;
@@ -67,6 +68,10 @@ void DataCollector::readSensors() {
         if(_dataIndex < 1000)
             _data[_dataIndex++] = sensors[x];
     }
+}
+
+int DataCollector::getDataCount() {
+    return _dataIndex + 1;
 }
 
 void DataCollector::cluster() {

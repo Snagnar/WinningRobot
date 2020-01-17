@@ -12,6 +12,7 @@ void wPrintln(String);
 class DebugServer {
     public:
     DebugServer(byte);
+    void init();
     void loop();
 
     private:

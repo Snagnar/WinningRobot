@@ -13,11 +13,13 @@ void wPrintln(String msg) {
 WebServer* DebugServer::_server = new WebServer(80);
 
 DebugServer::DebugServer(byte port) {
-    
-    _server->on("/", _handle_onConnect);
-    _server->on("/read", _handle_onRead);
-    _server->onNotFound(_handle_onNotFound);
-    _server->begin();
+}
+
+void DebugServer::init() {
+  _server->on("/", _handle_onConnect);
+  _server->on("/read", _handle_onRead);
+  _server->onNotFound(_handle_onNotFound);
+  _server->begin();
 }
 
 String DebugServer::_getMainPage(){
