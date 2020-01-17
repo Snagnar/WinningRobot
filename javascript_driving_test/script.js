@@ -14,7 +14,7 @@ function setup() {
     battleField = new BattleField(random(width), random(height));
     robot = new Robot(random(width), random(height));
     setSensors();
-    alert("start");
+    // alert("start");
 }
 
 function mod(n, m) {
@@ -22,8 +22,8 @@ function mod(n, m) {
 }
 
 function setSensors() {
-    let dist = 25;
-    for(let x = 0; x < 360; x+=36)
+    let dist = 15;
+    for(let x = 0; x < 360; x+=60)
         robot.set_sensor(Math.cos(x*Math.PI / 180.0) * dist, Math.sin(x*Math.PI / 180.0) * dist)
 }
 
@@ -41,7 +41,7 @@ function draw() {
 
         let diffNum = numberOfDifferences(sensors);
         if(mode == 0) { // this is when we never crossed a line before
-            if(diffNum <4) {
+            if(diffNum <2) {
                 step+=0.01;
                 robot.rotate(0.04);
                 robot.moveForward();
@@ -51,24 +51,31 @@ function draw() {
             }
         }
         else if(mode == 1) {
+            step=3;
             robot.moveForward();
-            if(diffNum < 4)
+            if(diffNum < 2)
                 justSet = false;
-            else if(!justSet || diffNum > 4) {
+            else if(!justSet || diffNum > 2) {
                 let newRotation = getRotationFromLineCrossing(sensors, diffNum);
-                if(newRotation < (Math.PI/8) || newRotation > (Math.PI * 15 / 8)) {
+                if(newRotation < (Math.PI/3) || newRotation > (Math.PI * 5 / 3)) {
+                    // alert("not serious");
                     rotationsQueue.unshift(mod(currRotation+newRotation, 2 * Math.PI));
                     if(rotationsQueue.length > 20) 
                         rotationsQueue.pop();
                     let avg = 0, count = 0;
                     for(let x = 0; x<rotationsQueue.length; x++) {
-                        avg += Math.pow(2, 10-x)*rotationsQueue[x];
-                        count += Math.pow(2, 10-x);
+                        // avg += Math.pow(2, 10-x)*rotationsQueue[x];
+                        // count += Math.pow(2, 10-x);
+                        avg +=rotationsQueue[x];
+                        count++;
                     }
+                    console.log("avg: "+(avg/count));
                     newRotation = mod((avg / count) - currRotation, 2 * Math.PI);
                 }
                 else
                     rotationsQueue = [];
+
+                console.log(rotationsQueue);
                 
                 currRotation += newRotation;
                 robot.rotate(newRotation);
@@ -119,32 +126,29 @@ function getRingColor(sensors){
 function getRotationFromLineCrossing(sensors, numberOfSensorDifferences) {
     let angle, color1, color2;
 
-    if(numberOfSensorDifferences != 4 && numberOfSensorDifferences != 5)
+    if(numberOfSensorDifferences != 2 && numberOfSensorDifferences != 3)
         return null;
 
-    for(let x = 0; x<10; x++) {
-        let prevPrev = sensors[mod(x - 2, 10)],
-            prev = sensors[mod(x - 1, 10)],
+    for(let x = 0; x<6; x++) {
+        let prev = sensors[mod(x - 1, 6)],
             own = sensors[x],
-            next = sensors[(x + 1) % 10],
-            nextNext = sensors[(x + 2) % 10],
-            nextNextNext = sensors[(x + 3) % 10];
+            next = sensors[(x + 1) % 6],
+            nextNext = sensors[(x + 2) % 6];
         
-        if( numberOfSensorDifferences == 4 &&
-            prev == own && next == nextNext && own == next && 
-            prevPrev != own && nextNextNext != own) {
+        if( numberOfSensorDifferences == 2 &&
+            own == next && prev != own && nextNext != own) {
                 
-                angle =  (x * Math.PI / 5) + (Math.PI / 10); // actually the angle is x * 36 degrees -> to radians: x * 36 * pi / 180
+                angle =  (x * Math.PI / 3) + (Math.PI / 6); // actually the angle is x * 36 degrees -> to radians: x * 36 * pi / 180
                 color1 = own;
-                color2 = sensors[(x + 5) % 10];
+                color2 = sensors[(x + 3) % 6];
                 break;
         }
-        if( numberOfSensorDifferences == 5 &&
-            prevPrev == prev && own == next && own == nextNext && own == prev) {
+        if( numberOfSensorDifferences == 3 &&
+            own == next && own == prev) {
 
-                angle = x * Math.PI / 5; // actually the angle is x * 36 degrees -> to radians: x * 36 * pi / 180
+                angle = x * Math.PI / 3; // actually the angle is x * 36 degrees -> to radians: x * 36 * pi / 180
                 color1 = own;
-                color2 = sensors[(x + 5) % 10];
+                color2 = sensors[(x + 3) % 6];
                 break;
         }
     }
