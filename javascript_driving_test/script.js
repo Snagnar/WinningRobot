@@ -51,7 +51,6 @@ function draw() {
             }
         }
         else if(mode == 1) {
-            step=3;
             robot.moveForward();
             if(diffNum < 2)
                 justSet = false;

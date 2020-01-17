@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <Servo.h>
+#include <deque>
 
 #define MOTOR_ENABLE 5
 #define MOTOR_INPUTA 16
@@ -36,12 +37,20 @@ class DriveLogic {
     void backward();
     void stop();
     void rotate(int);
+    void driveSpiral();
 
     void reactOnSensors(int*);
 
     private:
+    int _getRotationFromLineCrossing(int);
+    int _getDifferencesOfOppositeSensors();
+
+    std::deque<int> _rotationsQueue;
     int _mode;
     int _globalRotation;
+    int* _sensors;
+    int _sensorCount = 6;
+    bool _justSet = 0;
     Actor _actor;
 };
 
