@@ -36,6 +36,9 @@ void DriveLogic::rotate(int angle) {
     _rotationStage = 0;
 }
 
+void DriveLogic::setActorSteering(int angle) {
+    _actor.setSteering(angle);
+}
 
 void DriveLogic::_rotateStep() {
     // execute a step of the current rotation

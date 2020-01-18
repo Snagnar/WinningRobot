@@ -56,10 +56,10 @@ void main_loop() {
     if(mode == 0) robot.forward();
     else if((mode) == 1) robot.stop();
     else if((mode) == 2) robot.backward();
-    else if((mode) == 3) robot.stop();-
+    else if((mode) == 3) robot.stop();
     mode++;
     mode %=4;
-    robot.rotate(mode*55);
+    robot.setActorSteering(mode*55);
     sensors.readSensors();
     // sensors.cluster();
     // sensors.classifyAll();

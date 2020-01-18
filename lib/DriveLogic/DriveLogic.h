@@ -44,6 +44,7 @@ class DriveLogic {
     void rotate(int);
     void rotateStep();
     void driveSpiral();
+    void setActorSteering(int);
 
     void reactOnSensors(int*);
 
