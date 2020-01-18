@@ -25,7 +25,7 @@ DriveLogic robot;
 DataCollector sensors(sensorPins, 6);
 
 void setup() {
-  // Serial.begin(115200);
+  Serial.begin(115200);
 
   WiFi.softAP(ssid, password);
   delay(2000);
@@ -56,11 +56,15 @@ void main_loop() {
     if(mode == 0) robot.forward();
     else if((mode) == 1) robot.stop();
     else if((mode) == 2) robot.backward();
-    else if((mode) == 3) robot.stop();
+    else if((mode) == 3) robot.stop();-
     mode++;
     mode %=4;
     robot.rotate(mode*55);
     sensors.readSensors();
+    // sensors.cluster();
+    // sensors.classifyAll();
+    // robot.reactOnSensors(sensors.sensors);6
+
     wPrint("[");
     for(int x = 0; x<6; x++)
       wPrint(String(sensors.sensors[x])+",");

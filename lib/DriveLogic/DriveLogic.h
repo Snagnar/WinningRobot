@@ -10,6 +10,10 @@
 #define MOTOR_INPUTB 17
 #define SERVO_INPUT 18
 
+// this has to be tweaked heavily...
+#define DEGREES_PER_MILLISECOND_PER_STEER_DEGREE 0.0001
+#define MAX_STEER_WHEEL_TURN_SPEED 2
+
 
 // in this implementation all angles are processed in degrees
 
@@ -20,6 +24,7 @@ class Actor {
     void halt();
     void setSteering(int);
     void steer(int);
+    byte steerAngle();
 
     private:
     int _enable;
@@ -37,6 +42,7 @@ class DriveLogic {
     void backward();
     void stop();
     void rotate(int);
+    void rotateStep();
     void driveSpiral();
 
     void reactOnSensors(int*);
@@ -44,9 +50,17 @@ class DriveLogic {
     private:
     int _getRotationFromLineCrossing(int);
     int _getDifferencesOfOppositeSensors();
+    void _rotateStep();
+
+    uint64_t _prevRotationStep;
+    byte _rotationStage;
+    byte _rotationAngle;
+    byte _angleAfterSpeedUp;
+    byte _startRotationAngle;
 
     std::deque<int> _rotationsQueue;
     int _mode;
+    bool _currentlyRotating = 0;
     int _globalRotation;
     int* _sensors;
     int _sensorCount = 6;

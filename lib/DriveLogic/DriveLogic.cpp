@@ -1,6 +1,10 @@
 #include "DriveLogic.h"
 #include "DebugServer.h"
 
+int sign(int x) {
+    return (x > 0) - (x < 0);
+}
+
 DriveLogic::DriveLogic() {
     _globalRotation = 0;
 }
@@ -22,13 +26,49 @@ void DriveLogic::driveSpiral() {
     _actor.drive(true);
 }
 
+// TODO: execute a real rotation with the steering wheel
+// donno how this works, though...
 void DriveLogic::rotate(int angle) {
-    _actor.setSteering(angle);
+    // _actor.setSteering(angle);
+    _currentlyRotating = true;
+    _rotationAngle = angle;
+    _startRotationAngle = angle;
+    _rotationStage = 0;
 }
 
 
+void DriveLogic::_rotateStep() {
+    // execute a step of the current rotation
+    int rotationDir = sign(_rotationAngle);
+    uint64_t duration = millis() - _prevRotationStep;
+    _rotationAngle = abs(_rotationAngle) - duration * abs(_actor.steerAngle() - 90.0) * DEGREES_PER_MILLISECOND_PER_STEER_DEGREE;
+    _rotationAngle *= rotationDir;
+    if(_rotationStage == 0) {
+        _actor.steer(rotationDir * MAX_STEER_WHEEL_TURN_SPEED);
+        if((rotationDir == 1 && _actor.steerAngle() >= 175) || (rotationDir == -1 && _actor.steerAngle() <= 5)) {
+            _rotationStage = 1;
+            _angleAfterSpeedUp = _startRotationAngle - _rotationAngle;
+        }
+    }
+    else if(_rotationStage == 1) {
+        if(_rotationAngle <= _angleAfterSpeedUp)
+            _rotationStage = 2;
+    }
+    else if(_rotationStage == 2) {
+        _actor.steer(-rotationDir * MAX_STEER_WHEEL_TURN_SPEED);
+        if(_actor.steerAngle() == 90) {
+            _currentlyRotating = false;
+        }
+    }
+    _prevRotationStep = millis();
+}
+
 void DriveLogic::reactOnSensors(int* sensorValues) {
     _sensors = sensorValues;
+    if(_currentlyRotating) {
+        _rotateStep();
+        return;
+    }
 
     int diffNum = _getDifferencesOfOppositeSensors();
     if(_mode == 0) { // this is when we never crossed a line before
@@ -140,6 +180,10 @@ void Actor::drive(bool direction) {
 void Actor::halt() {
     digitalWrite(_inputA, HIGH);
     digitalWrite(_inputB, HIGH);
+}
+
+byte Actor::steerAngle() {
+    return _steerRotation;
 }
 
 void Actor::setSteering(int angle) {

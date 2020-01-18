@@ -10,6 +10,7 @@ class DataCollector {
     void readSensors();
     void cluster();
     byte classify(int);
+    void classifyAll();
     int getDataCount();
     int* sensors;
     double borders[2];
