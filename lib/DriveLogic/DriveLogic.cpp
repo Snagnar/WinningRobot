@@ -40,6 +40,8 @@ void DriveLogic::setActorSteering(int angle) {
     _actor.setSteering(angle);
 }
 
+
+// TODO: abort first steering if angle is too small
 void DriveLogic::_rotateStep() {
     // execute a step of the current rotation
     int rotationDir = sign(_rotationAngle);
@@ -54,14 +56,18 @@ void DriveLogic::_rotateStep() {
         }
     }
     else if(_rotationStage == 1) {
-        if(_rotationAngle <= _angleAfterSpeedUp)
+        if(_rotationAngle <= 3.0 * _angleAfterSpeedUp)
             _rotationStage = 2;
     }
     else if(_rotationStage == 2) {
         _actor.steer(-rotationDir * MAX_STEER_WHEEL_TURN_SPEED);
         if(_actor.steerAngle() == 90) {
-            _currentlyRotating = false;
+            _rotationStage = 3;
         }
+    }
+    else if(_rotationStage == 3) {
+        // _actor.steer(-rotationDir * MAX_STEER_WHEEL_TURN_SPEED);
+        // if()
     }
     _prevRotationStep = millis();
 }

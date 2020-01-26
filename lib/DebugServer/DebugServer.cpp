@@ -8,9 +8,25 @@ void wPrintln(String msg) {
   wPrint(msg+"\n");
 }
 
+void splitAt(char separator, const char input[], size_t inputSize, char first[], char second[]) {
+  for(int x = 0; x<inputSize; x++) {
+    if(input[x] == separator) {
+      strncpy(second, &input[x+1], inputSize - x);
+      first[x] = '\0';
+      return;
+    }
+    first[x] = input[x];
+  }
+  first[inputSize] = '\0';
+  second[0] = '\0';
+}
+
 // WebServer* _server;
 
 WebServer* DebugServer::_server = new WebServer(80);
+
+String DebugServer::_command = "none";
+String DebugServer::_argument = "none";
 
 DebugServer::DebugServer(byte port) {
 }
@@ -91,12 +107,12 @@ ptr+="});\n";
   ptr+="\n";
   ptr+="                function sendStuff() {\n";
   ptr+="                    let value = document.getElementById('sendInput').value;\n";
+  ptr+=" document.getElementById('sendInput').value = '';\n";
   ptr+="                    let output = document.getElementById('output');\n";
   ptr+="                    output.value+=value+'\\n';\n";
   ptr+="                    output.scrollTop = output.scrollHeight;\n";
   ptr+="                    var xhttp = new XMLHttpRequest();\n";
   ptr+="                    xhttp.onreadystatechange = function() {\n";
-  // ptr+="alert('answer: '+this.responseText);\n";
   ptr+="                    };\n";
   ptr+="                    xhttp.open('GET', '/write?value='+value, true);\n";
   ptr+="                    xhttp.send();\n";
@@ -111,6 +127,17 @@ ptr+="});\n";
   ptr+="            <div class='controls'>\n";
   ptr+="                <input type='text' id = 'sendInput' class = 'controls'>\n";
   ptr+="                <input type='button' value='send' onclick='sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='clear' onclick='document.getElementById(\"output\").value = \"\"' class = 'controls'> \n";
+  ptr+="                <input type='button' value='forward' onclick='document.getElementById(\"sendInput\").value = \"forward\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='backward' onclick='document.getElementById(\"sendInput\").value = \"backward\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='stop' onclick='document.getElementById(\"sendInput\").value = \"stop\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='sensorValues' onclick='document.getElementById(\"sendInput\").value = \"send\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='noSensorValues' onclick='document.getElementById(\"sendInput\").value = \"shut up\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='steer 30 deg' onclick='document.getElementById(\"sendInput\").value = \"steer 30\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='steer 60 deg' onclick='document.getElementById(\"sendInput\").value = \"steer 60\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='steer 90 deg' onclick='document.getElementById(\"sendInput\").value = \"steer 90\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='steer 120 deg' onclick='document.getElementById(\"sendInput\").value = \"steer 120\"; sendStuff();' class = 'controls'> \n";
+  ptr+="                <input type='button' value='steer 150 deg' onclick='document.getElementById(\"sendInput\").value = \"steer 150\"; sendStuff();' class = 'controls'> \n";
   ptr+="\n";
   ptr+="            </div>\n";
   ptr+="            </div>\n";
@@ -134,12 +161,8 @@ void DebugServer::_handle_onRead() {
 }
 
 void DebugServer::_handle_onWrite() {
-  wPrintln("got write request");
-  if(_server->hasArg("value")) {
-    wPrintln("value is present");
+  if(_server->hasArg("value"))
     _process_command(_server->arg("value"));
-  }
-  wPrintln("done with write");
   _server->send(200, "text/plain", "");
 }
 
@@ -153,5 +176,21 @@ void DebugServer::loop() {
 }
 
 void DebugServer::_process_command(String command) {
-  wPrintln(" >>> got command: "+command+" <<< ");
+  command.trim();
+  char commandPart[command.length()];
+  char argumentPart[command.length()];
+  splitAt(' ', command.c_str(), command.length(), commandPart, argumentPart);
+  _command = String(commandPart);
+  _argument = String(argumentPart);
+  wPrintln("received command: >"+_command+"< and argument: >"+_argument+"<");
+}
+
+String DebugServer::getCommand() {
+  String result = _command;
+  _command = "none";
+  return result;
+}
+
+String DebugServer::getArgument() {
+  return _argument;
 }

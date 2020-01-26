@@ -14,6 +14,8 @@ class DebugServer {
     DebugServer(byte);
     void init();
     void loop();
+    String getCommand();
+    String getArgument();
 
     private:
     static void _handle_onConnect();
@@ -23,6 +25,8 @@ class DebugServer {
     static void _process_command(String);
     static String _getMainPage();
     static WebServer* _server;
+    static String _command;
+    static String _argument;
 };
 
 #endif //DEBUGSERVER

@@ -5,10 +5,10 @@
 #include <Servo.h>
 #include <deque>
 
-#define MOTOR_ENABLE 5
-#define MOTOR_INPUTA 16
-#define MOTOR_INPUTB 17
-#define SERVO_INPUT 18
+#define MOTOR_ENABLE 16
+#define MOTOR_INPUTA 17
+#define MOTOR_INPUTB 22
+#define SERVO_INPUT 13
 
 // this has to be tweaked heavily...
 #define DEGREES_PER_MILLISECOND_PER_STEER_DEGREE 0.0001

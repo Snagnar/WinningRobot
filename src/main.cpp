@@ -11,6 +11,9 @@ const char* password = "SyntacticSugar";  //Enter Password here
 void server_loop();
 void main_loop();
 
+bool sendStuff = false;
+bool next = false;
+
 DebugServer dServer(80);
 
 Scheduler sched;
@@ -23,6 +26,26 @@ int sensorPins[] = {32, 33, 34, 35, 36, 39};
 
 DriveLogic robot;
 DataCollector sensors(sensorPins, 6);
+
+
+void reactOnDebugCommands() {
+  String command = dServer.getCommand(),
+          arg = dServer.getArgument();
+  if(command == "forward") 
+    robot.forward();
+  else if(command== "stop") 
+    robot.stop();
+  else if(command == "backward") 
+    robot.backward();
+  else if(command == "steer") {
+    wPrintln("sending arg to servo: "+arg);
+    robot.setActorSteering(arg.toInt());
+  }
+  else if(command == "send") 
+    sendStuff = true;
+  else if(command == "shut" && arg == "up") 
+    sendStuff = false;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -52,49 +75,18 @@ void main_loop() {
   yield();
   if((millis()-prev) > 1000) {
     prev = millis();
-    wPrintln("data points: "+String(sensors.getDataCount()));
-    if(mode == 0) robot.forward();
-    else if((mode) == 1) robot.stop();
-    else if((mode) == 2) robot.backward();
-    else if((mode) == 3) robot.stop();
-    mode++;
-    mode %=4;
-    robot.setActorSteering(mode*55);
     sensors.readSensors();
-    // sensors.cluster();
-    // sensors.classifyAll();
-    // robot.reactOnSensors(sensors.sensors);6
+  // sensors.cluster();
+  // sensors.classifyAll();
+  // robot.reactOnSensors(sensors.sensors);
+    reactOnDebugCommands();
 
-    wPrint("[");
-    for(int x = 0; x<6; x++)
-      wPrint(String(sensors.sensors[x])+",");
-    wPrintln("]");
+    if(sendStuff) {
+      wPrint("[");
+      for(int x = 0; x<6; x++)
+        wPrint(String(sensors.sensors[x])+",");
+      wPrintln("]");
+    }
+
   }
 }
-
-// #include "DebugServer.h"
-// #include "DataCollector.h"
-// #include "DriveLogic.h"
-// #include <WiFi.h>
-// #include <TaskScheduler.h>
-
-// #include <Arduino.h>
-
-
-// DebugServer dServer(80);
-
-// void setup() {
-//   Serial.begin(115200);
-//   //   // Serial.begin(115200);
-//   // Wifi.begin();k
-//   WiFi.softAP(ssid, password);
-//   delay(2000);
-//   dServer.init();
-//   Serial.println("HTTP server started");
-//   // wPrintln("Starting stuff...");
-// }
-
-// void loop() {
-//   Serial.println("here");
-//   delay(1000);
-// }
