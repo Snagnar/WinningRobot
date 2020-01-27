@@ -11,7 +11,7 @@ const char* password = "SyntacticSugar";  //Enter Password here
 void server_loop();
 void main_loop();
 
-bool sendStuff = false;
+bool sendStuff = true;
 bool next = false;
 
 DebugServer dServer(80);
@@ -22,6 +22,8 @@ Task main_task(0, TASK_FOREVER, &main_loop, &sched);
 
 unsigned long int prev = 0;
 int sensorPins[] = {32, 33, 34, 35, 36, 39};
+
+byte mode = 0;
 // int sensorPins[] = {34, 35, 32, 33, 25, 26, 27, 14, 21, 22};
 
 DriveLogic robot;
@@ -45,6 +47,58 @@ void reactOnDebugCommands() {
     sendStuff = true;
   else if(command == "shut" && arg == "up") 
     sendStuff = false;
+  else if(command == "clear" && arg == "all")
+    sensors.clearSensorValues();
+  else if(command == "start") 
+    mode = 1;
+  else if(command == "command") 
+    mode = 0;
+}
+
+void command_mode() {
+  if((millis()-prev) > 200) {
+    prev = millis();
+    sensors.readSensors();
+    // robot.reactOnSensors(sensors.sensors);
+    reactOnDebugCommands();
+
+    if(sendStuff) {
+      wPrintln("datapoints: "+String(sensors.getDataCount()));
+      wPrint("raw: [");
+      for(int x = 0; x<6; x++)
+        wPrint(String(sensors.sensors[x])+",");
+      wPrintln("]");
+
+      sensors.cluster();
+      wPrintln("border 1: "+String(sensors.borders[0])+" border 2: "+String(sensors.borders[1]));
+      sensors.classifyAll();
+      wPrint("classified: [");
+      for(int x = 0; x<6; x++)
+        wPrint(String(sensors.sensors[x])+",");
+      wPrintln("]");
+    }
+  }
+}
+
+void explore_mode() {
+  if((millis() - prev) > 200) {
+    robot.driveSpiral();
+    sensors.readSensors();
+    reactOnDebugCommands();
+    if(sensors.getDataCount() > 1000) {
+      mode = 2;
+      sensors.cluster();
+    }
+  }
+}
+
+void follow_the_light_mode() {
+  if((millis() - prev) > 60) {
+    sensors.readSensors();
+    sensors.classifyAll();
+    reactOnDebugCommands();
+    robot.reactOnSensors(sensors.sensors);
+  }
 }
 
 void setup() {
@@ -69,24 +123,10 @@ void server_loop() {
   dServer.loop();
 }
 
-int mode = 0;
 // only work with millis() delay here, delay() seems to crash the task scheduler
 void main_loop() {
   yield();
-  if((millis()-prev) > 1000) {
-    prev = millis();
-    sensors.readSensors();
-  // sensors.cluster();
-  // sensors.classifyAll();
-  // robot.reactOnSensors(sensors.sensors);
-    reactOnDebugCommands();
-
-    if(sendStuff) {
-      wPrint("[");
-      for(int x = 0; x<6; x++)
-        wPrint(String(sensors.sensors[x])+",");
-      wPrintln("]");
-    }
-
-  }
+  if(mode == 0) command_mode();
+  else if(mode == 1) explore_mode();
+  else if(mode == 2) follow_the_light_mode();
 }

@@ -12,6 +12,7 @@ class DataCollector {
     byte classify(int);
     void classifyAll();
     int getDataCount();
+    void clearSensorValues();
     int* sensors;
     double borders[2];
 

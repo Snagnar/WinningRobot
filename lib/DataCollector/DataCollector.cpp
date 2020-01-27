@@ -1,11 +1,12 @@
 #include "DataCollector.h"
+#include "DebugServer.h"
 
-double* kmeans(int* data, int num_data) {
+void kmeans(int* data, int num_data, double centroids[]) {
+    wPrintln("kmeans start");
     int min = INT_MAX,
         max = INT_MIN;
-    double values[3];
     if(!num_data)
-        return values;
+        return;
     for(int x = 0; x< num_data; x++) {
         if(data[x]<min) 
             min = data[x];
@@ -13,7 +14,9 @@ double* kmeans(int* data, int num_data) {
             max = data[x];
     }
     double dmin = (double) min, dmax = (double) max;
-    double centroids[3] = {dmin , dmin + (dmax - dmin) / 2.6, dmin + (dmax - dmin) * 0.68};
+    centroids[0] = dmin;
+    centroids[1] = dmin + (dmax - dmin) / 2.6;
+    centroids[2] = dmin + (dmax - dmin) * 0.68;
 
     while(true) {
         double means[3] = {0};
@@ -41,7 +44,8 @@ double* kmeans(int* data, int num_data) {
         if(zeros == 3)
             break;
     }
-    return centroids;
+    wPrintln("kmeans end");
+    // return centroids;
 }
 
 int readAnalogValue(byte pin) {
@@ -53,9 +57,10 @@ int readAnalogValue(byte pin) {
 }
 
 DataCollector::DataCollector(int* pins, int pinCount) {
-    for(int x = 0; x<pinCount; x++)
+    for(int x = 0; x<pinCount; x++) {
         pinMode(pins[x], INPUT);
-    
+        digitalWrite(pins[x], LOW);
+    }
     int values[pinCount] = {0};
     sensors = values;
     _pins = pins;
@@ -77,7 +82,9 @@ int DataCollector::getDataCount() {
 void DataCollector::cluster() {
     if(_dataIndex >=1000)
         return;
-    double* centers = kmeans(_data, _dataIndex);
+
+    double centers[3];
+    kmeans(_data, _dataIndex, centers);
 
     borders[0] = (centers[0] + centers[1]) / 2.0;
     borders[1] = (centers[1] + centers[2]) / 2.0;
@@ -92,4 +99,8 @@ byte DataCollector::classify(int value) {
     if(value<borders[0]) return 0;
     if(value<borders[1]) return 1;
     return 2;
+}
+
+void DataCollector::clearSensorValues() {
+    _dataIndex = 0;
 }
