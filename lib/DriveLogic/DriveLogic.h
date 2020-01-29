@@ -21,6 +21,7 @@ class Actor {
     public:
     Actor();
     void drive(bool);
+    void setSpeed(int);
     void halt();
     void setSteering(int);
     void steer(int);
@@ -45,6 +46,9 @@ class DriveLogic {
     void rotateStep();
     void driveSpiral();
     void setActorSteering(int);
+    void setActorSpeed(int);
+    void activateDebug();
+    void deactivateDebug();
 
     void reactOnSensors(int*);
 
@@ -66,6 +70,7 @@ class DriveLogic {
     int* _sensors;
     int _sensorCount = 6;
     bool _justSet = 0;
+    bool _debug;
     Actor _actor;
 };
 

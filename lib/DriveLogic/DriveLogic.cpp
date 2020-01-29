@@ -1,27 +1,49 @@
 #include "DriveLogic.h"
 #include "DebugServer.h"
 
+const int freq = 5000;
+const int ledChannel = 2;
+const int resolution = 10; 
+
 int sign(int x) {
     return (x > 0) - (x < 0);
 }
 
 DriveLogic::DriveLogic() {
     _globalRotation = 0;
+    _debug = false;
 }
 
+void DriveLogic::activateDebug() {
+    _debug = true;
+}
+
+void DriveLogic::deactivateDebug() {
+    _debug = false;
+}
+
+
 void DriveLogic::forward() {
+    if(_debug) 
+        wPrintln("Driving forward...");
     _actor.drive(true);
 }
 
 void DriveLogic::backward() {
+    if(_debug) 
+        wPrintln("Driving backward...");
     _actor.drive(false);
 }
 
 void DriveLogic::stop() {
+    if(_debug) 
+        wPrintln("stopping...");
     _actor.halt();
 }
 
 void DriveLogic::driveSpiral() {
+    if(_debug) 
+        wPrintln("Driving spiral...");
     _actor.setSteering(10);
     _actor.drive(true);
 }
@@ -37,9 +59,16 @@ void DriveLogic::rotate(int angle) {
 }
 
 void DriveLogic::setActorSteering(int angle) {
+    if(_debug) 
+        wPrintln("steering angle: "+String(angle)+"...");
     _actor.setSteering(angle);
 }
 
+void DriveLogic::setActorSpeed(int speed) {
+    if(_debug) 
+        wPrintln("setting speed: "+String(speed)+"...");
+    _actor.setSpeed(speed);
+}
 
 // TODO: abort first steering if angle is too small
 void DriveLogic::_rotateStep() {
@@ -171,7 +200,10 @@ Actor::Actor() {
     pinMode(_inputA, OUTPUT);
     pinMode(_inputB, OUTPUT);
 
-    digitalWrite(_enable, HIGH);
+    // digitalWrite(_enable, HIGH);
+    ledcSetup(ledChannel, freq, resolution);
+    ledcAttachPin(_enable, ledChannel);
+    ledcWrite(ledChannel, 1024);
     setSteering(90);
 }
 
@@ -193,6 +225,10 @@ void Actor::halt() {
 
 byte Actor::steerAngle() {
     return _steerRotation;
+}
+
+void Actor::setSpeed(int speed) {
+    ledcWrite(ledChannel, speed);
 }
 
 void Actor::setSteering(int angle) {

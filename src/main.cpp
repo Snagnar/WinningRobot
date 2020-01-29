@@ -11,8 +11,11 @@ const char* password = "SyntacticSugar";  //Enter Password here
 void server_loop();
 void main_loop();
 
-bool sendStuff = true;
+bool sendStuff = false;
 bool next = false;
+
+int stopTimeout = 0;
+unsigned long int stopStart = 0;
 
 DebugServer dServer(80);
 
@@ -45,7 +48,7 @@ void reactOnDebugCommands() {
   }
   else if(command == "send") 
     sendStuff = true;
-  else if(command == "shut" && arg == "up") 
+  else if(command == "shut" && arg == "up")
     sendStuff = false;
   else if(command == "clear" && arg == "all")
     sensors.clearSensorValues();
@@ -53,6 +56,24 @@ void reactOnDebugCommands() {
     mode = 1;
   else if(command == "command") 
     mode = 0;
+  else if(command == "speed")
+    robot.setActorSpeed(arg.toInt());
+  else if(command == "forwardFor") {
+    robot.forward();
+    stopTimeout = arg.toInt();
+    stopStart = millis();
+    wPrintln("got timeout: "+String(stopTimeout)+" and timestamp: "+String(stopStart));
+  }
+  else if(command == "backwardFor") {
+    robot.backward();
+    stopTimeout = arg.toInt();
+    stopStart = millis();
+    wPrintln("got timeout: "+String(stopTimeout)+" and timestamp: "+String(stopStart));
+  }
+  else if(command == "robotDebug") {
+    if(arg == "start") robot.activateDebug();
+    if(arg == "end") robot.deactivateDebug();
+  }
 }
 
 void command_mode() {
@@ -61,6 +82,14 @@ void command_mode() {
     sensors.readSensors();
     // robot.reactOnSensors(sensors.sensors);
     reactOnDebugCommands();
+
+    // wPrintln("diff: "+String(millis() - stopStart)+" cond: "+String(stopTimeout > 0 && (millis() - stopStart) > stopTimeout));
+
+    if(stopTimeout > 0 && (millis() - stopStart) > stopTimeout) {
+      wPrintln("stopping..."); 
+      robot.stop();
+      stopTimeout = 0;
+    }
 
     if(sendStuff) {
       wPrintln("datapoints: "+String(sensors.getDataCount()));
