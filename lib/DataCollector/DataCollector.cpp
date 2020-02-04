@@ -102,5 +102,5 @@ byte DataCollector::classify(int value) {
 }
 
 void DataCollector::clearSensorValues() {
-    _dataIndex = 0;
+    _dataIndex = 1;
 }

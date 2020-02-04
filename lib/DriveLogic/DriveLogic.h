@@ -11,8 +11,9 @@
 #define SERVO_INPUT 13
 
 // this has to be tweaked heavily...
-#define DEGREES_PER_MILLISECOND_PER_STEER_DEGREE 0.0001
-#define MAX_STEER_WHEEL_TURN_SPEED 2
+#define DEGREES_PER_MILLISECOND_PER_STEER_DEGREE 0.01
+#define MAX_STEER_WHEEL_TURN_SPEED_PER_MILLISECOND 0.1
+#define MAX_STEER_ANGLE 40
 
 
 // in this implementation all angles are processed in degrees
@@ -48,9 +49,13 @@ class DriveLogic {
     void setActorSteering(int);
     void setActorSpeed(int);
     void activateDebug();
+    bool rotating();
     void deactivateDebug();
-
+    void performRotationStep();
     void reactOnSensors(int*);
+    void setDPMSPSD(double);
+    void setMaxSteerPerMs(double);
+    void setMaxSteerAngle(double);
 
     private:
     int _getRotationFromLineCrossing(int);
@@ -62,6 +67,9 @@ class DriveLogic {
     byte _rotationAngle;
     byte _angleAfterSpeedUp;
     byte _startRotationAngle;
+    double _dpmpsd = DEGREES_PER_MILLISECOND_PER_STEER_DEGREE;
+    double _maxSteerWheelTurnPerMS = MAX_STEER_WHEEL_TURN_SPEED_PER_MILLISECOND;
+    double _maxSteerAngle = MAX_STEER_ANGLE;
 
     std::deque<int> _rotationsQueue;
     int _mode;

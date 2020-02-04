@@ -74,9 +74,30 @@ void reactOnDebugCommands() {
     if(arg == "start") robot.activateDebug();
     if(arg == "end") robot.deactivateDebug();
   }
+  else if(command == "fRotation") {
+    robot.forward();
+    robot.rotate(arg.toInt());
+  }
+  else if(command == "setDeg") {
+    robot.setDPMSPSD(arg.toDouble());
+  }
+  else if(command == "setMSS") {
+    robot.setMaxSteerPerMs(arg.toDouble());
+  }
+  else if(command == "setMSA") {
+    robot.setMaxSteerAngle(arg.toDouble());
+  }
 }
 
+unsigned long int prev2 = 0;
 void command_mode() {
+  if(robot.rotating() && (millis() - prev2) > 30) {
+    if(robot.rotating())
+      robot.performRotationStep();
+    if(!robot.rotating())
+      robot.stop();
+    prev2 = millis();
+  }
   if((millis()-prev) > 200) {
     prev = millis();
     sensors.readSensors();
@@ -86,7 +107,7 @@ void command_mode() {
     // wPrintln("diff: "+String(millis() - stopStart)+" cond: "+String(stopTimeout > 0 && (millis() - stopStart) > stopTimeout));
 
     if(stopTimeout > 0 && (millis() - stopStart) > stopTimeout) {
-      wPrintln("stopping..."); 
+      wPrintln("stopping...");
       robot.stop();
       stopTimeout = 0;
     }
@@ -138,6 +159,7 @@ void setup() {
   dServer.init();
   Serial.println("HTTP server started");
   wPrintln("Starting stuff...");
+  robot.setActorSteering(90);
   server_task.enable();
   main_task.enable();
   sched.startNow();

@@ -26,13 +26,13 @@ void DriveLogic::deactivateDebug() {
 void DriveLogic::forward() {
     if(_debug) 
         wPrintln("Driving forward...");
-    _actor.drive(true);
+    _actor.drive(false);
 }
 
 void DriveLogic::backward() {
     if(_debug) 
         wPrintln("Driving backward...");
-    _actor.drive(false);
+    _actor.drive(true);
 }
 
 void DriveLogic::stop() {
@@ -51,15 +51,19 @@ void DriveLogic::driveSpiral() {
 // TODO: execute a real rotation with the steering wheel
 // donno how this works, though...
 void DriveLogic::rotate(int angle) {
+    if(_debug)
+        wPrintln("rotating angle: "+String(angle));
     // _actor.setSteering(angle);
     _currentlyRotating = true;
     _rotationAngle = angle;
     _startRotationAngle = angle;
     _rotationStage = 0;
+    _prevRotationStep = millis();
+    _angleAfterSpeedUp = 0;
 }
 
 void DriveLogic::setActorSteering(int angle) {
-    if(_debug) 
+    if(_debug)
         wPrintln("steering angle: "+String(angle)+"...");
     _actor.setSteering(angle);
 }
@@ -72,14 +76,16 @@ void DriveLogic::setActorSpeed(int speed) {
 
 // TODO: abort first steering if angle is too small
 void DriveLogic::_rotateStep() {
+    if(_debug)
+        wPrintln("in rotationStep");
     // execute a step of the current rotation
     int rotationDir = sign(_rotationAngle);
     uint64_t duration = millis() - _prevRotationStep;
-    _rotationAngle = abs(_rotationAngle) - duration * abs(_actor.steerAngle() - 90.0) * DEGREES_PER_MILLISECOND_PER_STEER_DEGREE;
+    _rotationAngle = abs(_rotationAngle) - duration * abs(_actor.steerAngle() - 90.0) * _dpmpsd;
     _rotationAngle *= rotationDir;
     if(_rotationStage == 0) {
-        _actor.steer(rotationDir * MAX_STEER_WHEEL_TURN_SPEED);
-        if((rotationDir == 1 && _actor.steerAngle() >= 175) || (rotationDir == -1 && _actor.steerAngle() <= 5)) {
+        _actor.steer(rotationDir * _maxSteerWheelTurnPerMS * duration);
+        if((rotationDir == 1 && _actor.steerAngle() >= (180 - _maxSteerAngle)) || (rotationDir == -1 && _actor.steerAngle() <= _maxSteerAngle)) {
             _rotationStage = 1;
             _angleAfterSpeedUp = _startRotationAngle - _rotationAngle;
         }
@@ -89,16 +95,33 @@ void DriveLogic::_rotateStep() {
             _rotationStage = 2;
     }
     else if(_rotationStage == 2) {
-        _actor.steer(-rotationDir * MAX_STEER_WHEEL_TURN_SPEED);
-        if(_actor.steerAngle() == 90) {
-            _rotationStage = 3;
+        _actor.steer(-rotationDir * _maxSteerWheelTurnPerMS * duration);
+        if(_actor.steerAngle() >=89.0 && _actor.steerAngle() <= 91.0) {
+            _currentlyRotating = false;
         }
     }
-    else if(_rotationStage == 3) {
-        // _actor.steer(-rotationDir * MAX_STEER_WHEEL_TURN_SPEED);
-        // if()
-    }
     _prevRotationStep = millis();
+}
+
+void DriveLogic::setDPMSPSD(double value) {
+    _dpmpsd = value;
+}
+
+void DriveLogic::setMaxSteerPerMs(double value) {
+    _maxSteerWheelTurnPerMS = value;
+}
+
+void DriveLogic::setMaxSteerAngle(double value) {
+    _maxSteerAngle = value;
+}
+
+bool DriveLogic::rotating() {
+    return _currentlyRotating;
+}
+
+void DriveLogic::performRotationStep() {
+    if(_currentlyRotating)
+        _rotateStep();
 }
 
 void DriveLogic::reactOnSensors(int* sensorValues) {
