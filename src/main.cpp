@@ -24,6 +24,8 @@ Task server_task(0, TASK_FOREVER, &server_loop, &sched);
 Task main_task(0, TASK_FOREVER, &main_loop, &sched);
 
 unsigned long int prev = 0;
+unsigned long int prev2 = 0;
+
 int sensorPins[] = {32, 33, 34, 35, 36, 39};
 
 byte mode = 0;
@@ -52,10 +54,16 @@ void reactOnDebugCommands() {
     sendStuff = false;
   else if(command == "clear" && arg == "all")
     sensors.clearSensorValues();
-  else if(command == "start") 
-    mode = 1;
-  else if(command == "command") 
+  else if(command == "command") {
     mode = 0;
+  }
+  else if(command == "start") {
+    sensors.clearSensorValues();
+    robot.activateSpiral();
+    prev = millis();
+    prev2 = millis();
+    mode = 1;
+  }
   else if(command == "speed")
     robot.setActorSpeed(arg.toInt());
   else if(command == "forwardFor") {
@@ -72,7 +80,7 @@ void reactOnDebugCommands() {
   }
   else if(command == "robotDebug") {
     if(arg == "start") robot.activateDebug();
-    if(arg == "end") robot.deactivateDebug();
+    if(arg == "stop") robot.deactivateDebug();
   }
   else if(command == "fRotation") {
     robot.forward();
@@ -87,11 +95,17 @@ void reactOnDebugCommands() {
   else if(command == "setMSA") {
     robot.setMaxSteerAngle(arg.toDouble());
   }
+  else if(command == "spiral") {
+    robot.activateSpiral();
+    robot.driveSpiral();
+  }
+  else if(command == "nospiral") {
+    robot.deactivateSpiral();
+  }
 }
 
-unsigned long int prev2 = 0;
 void command_mode() {
-  if(robot.rotating() && (millis() - prev2) > 30) {
+  if(robot.rotating() && (millis() - prev2) > 200) {
     if(robot.rotating())
       robot.performRotationStep();
     if(!robot.rotating())
@@ -131,19 +145,38 @@ void command_mode() {
 }
 
 void explore_mode() {
-  if((millis() - prev) > 200) {
+  if((millis() - prev2) > 20) {
     robot.driveSpiral();
+    prev2 = millis();
+  }
+  if((millis() - prev) > 100) {
+    prev = millis();
     sensors.readSensors();
     reactOnDebugCommands();
+    wPrintln("datas :"+String(sensors.getDataCount()));
     if(sensors.getDataCount() > 1000) {
       mode = 2;
+      // robot.forward();
       sensors.cluster();
+      robot.stop();
+      robot.setActorSteering(90);
+      robot.activateSpiral();
+       wPrintln("now done with mode 1");
+      // robot.stop();
+      // robot.setActorSteering(90);
+      // mode = 0;
     }
   }
 }
 
 void follow_the_light_mode() {
-  if((millis() - prev) > 60) {
+  if(robot.rotating() && (millis() - prev2) > 10) {
+    if(robot.rotating())
+      robot.performRotationStep();
+    prev2 = millis();
+  }
+  if((millis() - prev) > 30) {
+    prev = millis();
     sensors.readSensors();
     sensors.classifyAll();
     reactOnDebugCommands();
